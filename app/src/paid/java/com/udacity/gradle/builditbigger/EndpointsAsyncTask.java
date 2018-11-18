@@ -3,6 +3,7 @@ package com.udacity.gradle.builditbigger;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -18,15 +19,16 @@ import java.io.IOException;
 
 public class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
 
+    private static final String JOKES_KEY = "jokes";
     private static MyApi myApiService = null;
-    private Context context;
-    private ProgressBar progressBar;
-    private TextView textView;
+    private Context mContext;
+    private ProgressBar mProgressBar;
+    private TextView mTextView;
 
-    public EndpointsAsyncTask(Context context,ProgressBar progressBar,TextView textView) {
-        this.context =context;
-        this.progressBar = progressBar;
-        this.textView = textView;
+    public EndpointsAsyncTask(Context context, @Nullable ProgressBar progressBar, @Nullable TextView textView, @Nullable String name) {
+        this.mContext = context;
+        this.mProgressBar = progressBar;
+        this.mTextView = textView;
     }
 
     @Override
@@ -40,7 +42,7 @@ public class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
                     .setRootUrl("http://10.0.2.2:8080/_ah/api/")
                     .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
                         @Override
-                        public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
+                        public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) {
                             abstractGoogleClientRequest.setDisableGZipContent(true);
                         }
                     });
@@ -51,27 +53,27 @@ public class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
         try {
             return myApiService.getJokesApi().execute().getData();
         } catch (IOException e) {
-            return "";
+            return null;
         }
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        textView.setVisibility(View.INVISIBLE);
-        progressBar.setVisibility(View.VISIBLE);
+        if (mProgressBar != null) mProgressBar.setVisibility(View.VISIBLE);
+        if (mTextView != null) mTextView.setVisibility(View.INVISIBLE);
     }
 
     @Override
     protected void onPostExecute(String result) {
-        progressBar.setVisibility(View.INVISIBLE);
+        if (mProgressBar != null) mProgressBar.setVisibility(View.INVISIBLE);
 
-        if (result != null && !result.equalsIgnoreCase("")) {
-            Intent intent = new Intent(context, JokeActivity.class);
-            intent.putExtra("jokes", result);
-            context.startActivity(intent);
+        if (result != null) {
+            Intent intent = new Intent(mContext, JokeActivity.class);
+            intent.putExtra(JOKES_KEY, result);
+            mContext.startActivity(intent);
         }else {
-            textView.setVisibility(View.VISIBLE);
+            if (mTextView != null) mTextView.setVisibility(View.VISIBLE);
         }
 
 

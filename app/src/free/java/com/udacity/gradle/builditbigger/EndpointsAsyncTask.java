@@ -18,26 +18,32 @@ import com.udacity.gradle.builditbigger.backend.myApi.MyApi;
 
 import java.io.IOException;
 
+import javax.annotation.Nullable;
+
 public class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
 
+    private static final String JOKES_KEY = "jokes";
     private static MyApi myApiService = null;
-    private Context context;
-    private ProgressBar progressBar;
-    private TextView textView;
+    private Context mContext;
+    private ProgressBar mProgressBar;
+    private TextView mTextView;
     private InterstitialAd mInterstitialAd;
 
-    public EndpointsAsyncTask(Context context,ProgressBar progressBar,TextView textView ,InterstitialAd mInterstitialAd) {
-        this.context =context;
-        this.progressBar = progressBar;
-        this.textView = textView;
+    public EndpointsAsyncTask(Context context,
+                              @Nullable ProgressBar progressBar,
+                              @Nullable TextView textView ,
+                              @Nullable InterstitialAd mInterstitialAd) {
+        this.mContext =context;
+        this.mProgressBar = progressBar;
+        this.mTextView = textView;
         this.mInterstitialAd = mInterstitialAd;
     }
 
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        textView.setVisibility(View.INVISIBLE);
-        progressBar.setVisibility(View.VISIBLE);
+        if(mProgressBar != null) mProgressBar.setVisibility(View.VISIBLE);
+        if (mTextView != null) mTextView.setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -63,66 +69,78 @@ public class EndpointsAsyncTask extends AsyncTask<Void, Void, String> {
         try {
             return myApiService.getJokesApi().execute().getData();
         } catch (IOException e) {
-            return "";
+            return null;
         }
     }
 
     @Override
     protected void onPostExecute(final String result) {
-        progressBar.setVisibility(View.INVISIBLE);
-        final Intent intent = new Intent(context, JokeActivity.class);
+        if(mProgressBar != null) mProgressBar.setVisibility(View.INVISIBLE);
+        final Intent intent = new Intent(mContext, JokeActivity.class);
 
-        if (mInterstitialAd.isLoaded()) {
-            mInterstitialAd.show();
-        } else {
-            if (result != null && !result.equalsIgnoreCase("")) {
-                intent.putExtra("jokes", result);
-                context.startActivity(intent);
-            }else {
-                textView.setVisibility(View.VISIBLE);
+
+        if (mInterstitialAd !=null) {
+            if (mInterstitialAd.isLoaded()) {
+                mInterstitialAd.show();
+            } else {
+                launchActivity(intent,result);
             }
+        }else {
+            launchActivity(intent,result);
         }
 
-        mInterstitialAd.setAdListener(new AdListener() {
-            @Override
-            public void onAdLoaded() {
-                // Code to be executed when an ad finishes loading.
-            }
 
-            @Override
-            public void onAdFailedToLoad(int errorCode) {
-                // Code to be executed when an ad request fails.
-                if (result != null && !result.equalsIgnoreCase("")) {
-                    Intent intent = new Intent(context, JokeActivity.class);
-                    intent.putExtra("jokes", result);
-                    context.startActivity(intent);
-                }else {
-                    textView.setVisibility(View.VISIBLE);
+        if (mInterstitialAd != null) {
+            mInterstitialAd.setAdListener(new AdListener() {
+                @Override
+                public void onAdLoaded() {
+                    // Code to be executed when an ad finishes loading.
                 }
-            }
 
-            @Override
-            public void onAdOpened() {
-                // Code to be executed when the ad is displayed.
-            }
-
-            @Override
-            public void onAdLeftApplication() {
-                // Code to be executed when the user has left the app.
-            }
-
-            @Override
-            public void onAdClosed() {
-                // Code to be executed when when the interstitial ad is closed.
-                if (result != null && !result.equalsIgnoreCase("")) {
-                    Intent intent = new Intent(context, JokeActivity.class);
-                    intent.putExtra("jokes", result);
-                    context.startActivity(intent);
-                }else {
-                    textView.setVisibility(View.VISIBLE);
+                @Override
+                public void onAdFailedToLoad(int errorCode) {
+                    // Code to be executed when an ad request fails.
+                    if (result != null && !result.equalsIgnoreCase("")) {
+                        Intent intent = new Intent(mContext, JokeActivity.class);
+                        intent.putExtra("jokes", result);
+                        mContext.startActivity(intent);
+                    }else {
+                        mTextView.setVisibility(View.VISIBLE);
+                    }
                 }
-            }
-        });
 
+                @Override
+                public void onAdOpened() {
+                    // Code to be executed when the ad is displayed.
+                }
+
+                @Override
+                public void onAdLeftApplication() {
+                    // Code to be executed when the user has left the app.
+                }
+
+                @Override
+                public void onAdClosed() {
+                    // Code to be executed when when the interstitial ad is closed.
+                    if (result != null && !result.equalsIgnoreCase("")) {
+                        Intent intent = new Intent(mContext, JokeActivity.class);
+                        intent.putExtra("jokes", result);
+                        mContext.startActivity(intent);
+                    }else {
+                        mTextView.setVisibility(View.VISIBLE);
+                    }
+                }
+            });
+        }
+
+    }
+
+    private void launchActivity(Intent intent , String result) {
+        if (result != null) {
+            intent.putExtra(JOKES_KEY, result);
+            mContext.startActivity(intent);
+        }else {
+            if (mTextView != null)mTextView.setVisibility(View.VISIBLE);
+        }
     }
 }

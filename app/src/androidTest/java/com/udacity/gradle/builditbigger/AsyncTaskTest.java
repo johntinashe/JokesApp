@@ -1,7 +1,6 @@
 package com.udacity.gradle.builditbigger;
 
 
-import android.content.Context;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
@@ -12,7 +11,6 @@ import org.junit.runner.RunWith;
 
 import java.util.concurrent.ExecutionException;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 @RunWith(AndroidJUnit4.class)
@@ -24,10 +22,10 @@ public class AsyncTaskTest  {
     @Test
     public void nonEmpty() {
 
-        EndpointsAsyncTask endpointsAsyncTask = new EndpointsAsyncTask();
+        EndpointsAsyncTask endpointsAsyncTask = new EndpointsAsyncTask(mActivityTestRule.getActivity(), null, null, null);
         try {
-            String joke = endpointsAsyncTask.execute(mActivityTestRule.getActivity()).get();
-            assertNotEquals(joke,"");
+            String joke = endpointsAsyncTask.execute().get();
+            assertNotEquals(joke, null);
             Log.d("jokes",joke);
         } catch (InterruptedException e) {
             e.printStackTrace();
